@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Tin nhắn yêu thương</title>
+<title>Ban cán sự – Trao đổi nội bộ</title>
 <style>
 :root{--v:#7c3aed;--p:#ec4899;--c:#06b6d4;--o:#f59e0b;--g:#10b981;--tx:#1e1b4b;--mt:#6b7280;--bd:#ede9fe;--sf:#fff}
 *{box-sizing:border-box}
@@ -76,7 +76,17 @@ form.send{display:flex;gap:9px;padding:12px 14px;border-top:2px solid var(--bd);
 .m.me .fc button{background:#fff;color:var(--v)}
 button.clip{background:#f3f0ff;font-size:18px;padding:8px 12px}
 #up{padding:6px 16px;background:#fff7ed;color:#c2410c;border-top:2px solid var(--bd)}
-#wm{position:fixed;inset:0;pointer-events:none;z-index:50;opacity:.035}
+#wm{position:fixed;inset:0;pointer-events:none;z-index:50;opacity:.03;mix-blend-mode:difference}
+.picw{position:relative;display:inline-block;max-width:100%;line-height:0;margin:4px 0}
+.picw .pic{margin:0}
+.picwm{position:absolute;inset:0;pointer-events:none;mix-blend-mode:difference;opacity:.06;border-radius:12px}
+#me{cursor:pointer}
+.poll{display:flex;flex-direction:column;gap:6px;min-width:230px;margin:2px 0}
+.pv{position:relative;text-align:left;color:var(--tx);border:2px solid var(--bd);background:linear-gradient(90deg,#c4b5fd var(--p,0%),#f3f0ff var(--p,0%))}
+.pv.on{border-color:var(--v)}
+.poll small{opacity:.7}
+.dlg>div>button{text-align:left}
+select{font:inherit;color:var(--tx);background:#faf8ff;border:2px solid var(--bd);border-radius:12px;padding:8px;width:100%}
 #cover{position:fixed;inset:0;z-index:60;background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;display:flex;align-items:center;justify-content:center;text-align:center;font-size:18px;line-height:1.6;padding:24px}
 #app{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 #app input,#app textarea{user-select:text;-webkit-user-select:text}
@@ -97,8 +107,8 @@ img{-webkit-user-drag:none}
 <div id="auth" hidden>
   <div class="card">
     <div class="logo">🔒</div>
-    <h1>Tin nhắn yêu thương</h1>
-    <p class="sub">Nơi trao đổi thông tin</p>
+    <h1>Ban cán sự</h1>
+    <p class="sub">Nơi trao đổi thông tin nội bộ của lớp</p>
     <div class="tabs"><button id="tl" class="on" type="button">Đăng nhập</button><button id="tr" type="button">Đăng ký</button></div>
     <form id="af">
       <input id="an" placeholder="Họ và tên" autocomplete="name" hidden>
@@ -107,23 +117,23 @@ img{-webkit-user-drag:none}
       <div class="err" id="aerr"></div>
       <button class="p" id="go">Đăng nhập</button>
       <button class="link" id="forgot" type="button">Quên mật khẩu?</button>
-      <div class="note" style="text-align:center">Nội dung trong nhóm là thông tin mật. Khi sử dụng, bạn đồng ý giữ bí mật và chấp nhận nội dung có thể được gắn dấu để truy nguồn khi bị lộ.</div>
+      <div class="note" style="text-align:center">Nội dung trong nhóm là thông tin mật. Khi sử dụng, bạn đồng ý giữ bí mật và chấp nhận nội dung có thể được gắn dấu để truy nguồn khi bị lộ, và quản trị viên có thể xem nội dung, hoạt động trong các nhóm.</div>
     </form>
   </div>
 </div>
 
 <div id="app" hidden>
   <aside>
-    <header><h1> Tin nhắn yêu thương <button class="w sm" id="newg">+ Nhóm</button></header>
+    <header><h1>🔒 Ban cán sự</h1><button class="w sm" id="newg">+ Nhóm</button></header>
     <div id="me"></div>
     <div id="glist"></div>
-    <div style="padding:10px 16px;border-top:2px solid var(--bd)"><div class="note" style="margin-bottom:8px">🛡 Nội dung nhóm là thông tin mật, có thể được gắn dấu để truy nguồn nếu bị lộ.</div><button class="sm" id="out">Đăng xuất</button> <button class="sm" id="trace" hidden>🔍 Truy vết</button></div>
+    <div style="padding:10px 16px;border-top:2px solid var(--bd)"><div class="note" style="margin-bottom:8px">🛡 Nội dung nhóm là thông tin mật, có thể được gắn dấu để truy nguồn nếu bị lộ.</div><button class="sm" id="out">Đăng xuất</button> <button class="sm" id="trace" hidden>🔍 Truy vết</button> <button class="sm" id="adm" hidden>🛠 Quản trị</button></div>
   </aside>
   <main>
-    <header><button id="back" class="w sm">←</button><h1 id="gt">Chọn một nhóm</h1><button id="mem" class="w sm" hidden>👥 Thành viên</button></header>
+    <header><button id="back" class="w sm">←</button><h1 id="gt">Chọn một nhóm</h1><button id="tools" class="w sm" hidden>🧰 Tiện ích</button><button id="mem" class="w sm" hidden>👥 Thành viên</button></header>
     <div id="msgs"><div class="empty"><div class="big">💬</div>Chọn hoặc tạo một nhóm để bắt đầu trao đổi.</div></div>
     <div class="note" id="up" hidden></div>
-    <form class="send" id="f" hidden><button type="button" class="clip" id="clip" title="Đính kèm ảnh hoặc tệp">📎</button><input type="file" id="fi" multiple hidden><textarea id="in" rows="1" placeholder="Nhập tin nhắn…"></textarea><button class="p">Gửi</button></form>
+    <form class="send" id="f" hidden><button type="button" class="clip" id="clip" title="Đính kèm ảnh hoặc tệp">📎</button><button type="button" class="clip" id="emo" title="Biểu tượng">😊</button><input type="file" id="fi" multiple hidden><textarea id="in" rows="1" placeholder="Nhập tin nhắn…"></textarea><button class="p">Gửi</button></form>
   </main>
 </div>
 
@@ -144,11 +154,13 @@ const firebaseConfig = {
 const $=s=>document.querySelector(s);
 const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
+const SHOW_WM=false; // đặt true để bật lại mã mờ trên màn hình
+const ADMINS=["tson82537@gmail.com"];let U={},unsubU=null,isAdmin=false,pingT=null,unsubV=null,votes={},pollUI={};
 let me=null,myName="",groups=[],cur=null,unsubG=null,unsubM=null,names={},mode="login",pendingName="";
 
 const COLORS=["#7c3aed","#ec4899","#06b6d4","#f59e0b","#10b981","#3b82f6","#ef4444"];
 const color=s=>{let h=0;for(const ch of s)h=(h*31+ch.charCodeAt(0))>>>0;return COLORS[h%COLORS.length]};
-const avatar=(name,id)=>{const a=el("div","av",(name||"?").trim().charAt(0).toUpperCase());a.style.background=`linear-gradient(135deg,${color(id||name)},${color((id||name)+"x")})`;return a};
+const avatar=(name,id,photo)=>{const a=el("div","av",photo?"":(name||"?").trim().charAt(0).toUpperCase());a.style.background=photo?"url("+photo+") center/cover":`linear-gradient(135deg,${color(id||name)},${color((id||name)+"x")})`;return a};
 const norm=s=>s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/đ/g,"d").trim();
 const keysOf=n=>{const k=new Set();norm(n).split(/\s+/).filter(Boolean).forEach(w=>{for(let i=1;i<=Math.min(w.length,15);i++)k.add(w.slice(0,i))});return [...k]};
 const toast=t=>{const x=el("div","toast",t);document.body.appendChild(x);setTimeout(()=>x.remove(),2600)};
@@ -191,16 +203,20 @@ async function saveProfile(uid,name,email){
 }
 
 onAuthStateChanged(auth,async u=>{
+  if(unsubU){unsubU();unsubU=null}
   if(unsubG){unsubG();unsubG=null}if(unsubM){unsubM();unsubM=null}
   cur=null;groups=[];
-  if(!u){me=null;setWM();$("#cover").hidden=true;$("#app").hidden=true;$("#auth").hidden=false;return}
+  if(!u){clearInterval(pingT);me=null;setWM();$("#cover").hidden=true;$("#app").hidden=true;$("#auth").hidden=false;return}
   me=u.uid;$("#auth").hidden=true;$("#app").hidden=false;
   try{
     const s=await getDoc(doc(db,"users",me));
     if(s.exists()&&s.data().keys){myName=s.data().name;names[me]=myName;$("#me").textContent="👤 "+myName}
     else await saveProfile(me,pendingName||u.displayName||u.email.split("@")[0],u.email);
   }catch(e){myName=u.displayName||u.email;$("#me").textContent="👤 "+myName}
-  setWM();openG(null);
+  isAdmin=ADMINS.includes((u.email||"").toLowerCase());$("#adm").hidden=!isAdmin;
+  const ping=()=>updateDoc(doc(db,"users",me),{lastSeen:Date.now()}).catch(()=>{});ping();clearInterval(pingT);pingT=setInterval(ping,120000);
+  unsubU=onSnapshot(collection(db,"users"),s=>{s.docs.forEach(d=>{U[d.id]=d.data();names[d.id]=d.data().name});if(U[me]&&U[me].banned&&!isAdmin){signOut(auth);alert("Tài khoản của bạn đã bị quản trị viên khóa.");return}renderG()},()=>{});
+  await loadCode();setWM();openG(null);
   unsubG=onSnapshot(query(collection(db,"groups"),where("members","array-contains",me)),s=>{
     groups=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.name||"").localeCompare(b.name||"","vi"));
     if(cur&&!groups.some(g=>g.id===cur))openG(null);
@@ -210,12 +226,12 @@ onAuthStateChanged(auth,async u=>{
 
 /* ---------- Nhóm & tin nhắn ---------- */
 function renderG(){
-  $("#trace").hidden=!groups.some(g=>g.owner===me);
+  $("#trace").hidden=!isAdmin;
   const l=$("#glist");l.replaceChildren();
   if(!groups.length){const d=el("div","empty");d.appendChild(el("div","big","✨"));d.appendChild(document.createTextNode("Bạn chưa thuộc nhóm nào. Bấm “+ Nhóm” để tạo."));l.appendChild(d);return}
   groups.forEach(g=>{
     const d=el("div","g"+(g.id===cur?" on":""));
-    d.appendChild(avatar(g.name,g.id));
+    d.appendChild(avatar(g.name,g.id,g.photo));
     const t=el("div");t.style.minWidth=0;t.appendChild(el("b",null,g.name));t.appendChild(el("small",null,(g.members||[]).length+" thành viên"));
     d.appendChild(t);d.onclick=()=>openG(g.id);l.appendChild(d);
   });
@@ -223,24 +239,31 @@ function renderG(){
 const headFor=()=>{const g=groups.find(x=>x.id===cur);if(g)$("#gt").textContent=g.name};
 
 function openG(id){
-  cur=id;if(unsubM){unsubM();unsubM=null}
+  cur=id;if(unsubM){unsubM();unsubM=null}if(unsubV){unsubV();unsubV=null}votes={};pollUI={};
   renderG();
   $("#app").classList.toggle("chat",!!id);
-  $("#f").hidden=!id;$("#mem").hidden=!id;
+  $("#f").hidden=!id;$("#mem").hidden=!id;$("#tools").hidden=!id;
   const box=$("#msgs");
   if(!id){$("#gt").textContent="Chọn một nhóm";box.replaceChildren(mkEmpty("💬","Chọn hoặc tạo một nhóm để bắt đầu trao đổi."));return}
   headFor();box.replaceChildren(mkEmpty("⏳","Đang tải…"));
+  unsubV=onSnapshot(query(collection(db,"groups",id,"messages"),where("ts","==",-2)),sv=>{const nv={};sv.docs.forEach(dd=>{const v=dd.data(),o=nv[v.pv]||(nv[v.pv]={});if(!o[v.uid]||v.at>o[v.uid].at)o[v.uid]={o:v.o,at:v.at}});votes=nv;Object.values(pollUI).forEach(f=>f())},()=>{});
   unsubM=onSnapshot(query(collection(db,"groups",id,"messages"),where("ts",">",0),orderBy("ts","asc")),s=>{try{
     box.replaceChildren();
     if(s.empty)box.appendChild(mkEmpty("👋","Chưa có tin nhắn nào. Hãy gửi lời chào!"));
     s.docs.forEach(d=>{const m=d.data();
       const x=el("div","m"+(m.uid===me?" me":""));
-      x.appendChild(el("b",null,m.name));
-      if(m.img){const im=el("img","pic");im.src=m.img;im.onclick=()=>viewImg(m.img);x.appendChild(im)}
+      x.appendChild(el("b",null,(U[m.uid]&&U[m.uid].name)||m.name));
+      if(m.img){const w=el("span","picw"),im=el("img","pic");im.src=m.img;im.onclick=()=>viewImg(m.img);w.appendChild(im);w.appendChild(picWM());x.appendChild(w)}
       if(m.file){const fc=el("div","fc");fc.appendChild(el("div","fi",fIcon(m.file.type||"")));const t=el("div","ft");t.appendChild(el("strong",null,m.file.name));t.appendChild(el("small",null,fmtSize(m.file.size)));fc.appendChild(t);const bt=el("button","sm","⬇ Tải");bt.onclick=()=>download(id,d.id,m.file,bt);fc.appendChild(bt);x.appendChild(fc)}
+      if(m.poll){const pb=el("div","poll");pb.appendChild(el("strong",null,"📊 "+m.poll.q));const list=el("div","poll");pb.appendChild(list);
+        const draw=()=>{list.replaceChildren();const v=votes[d.id]||{},tot=Object.keys(v).length;
+          m.poll.o.forEach((o,i)=>{const n=Object.values(v).filter(z=>z.o===i).length,r=el("button","pv",o+" · "+n);r.style.setProperty("--p",tot?Math.round(n*100/tot)+"%":"0%");if(v[me]&&v[me].o===i)r.classList.add("on");r.onclick=()=>postMsg({pv:d.id,o:i,at:Date.now(),ts:-2,uid:me});list.appendChild(r)});
+          list.appendChild(el("small",null,tot+" lượt bình chọn"))};
+        draw();pollUI[d.id]=draw;x.appendChild(pb)}
+      if(m.call){const cb=el("div","fc");cb.appendChild(el("div","fi",m.call.v?"📹":"📞"));const t=el("div","ft");t.appendChild(el("strong",null,m.call.v?"Cuộc gọi video":"Cuộc gọi thoại"));t.appendChild(el("small",null,"Bấm để tham gia"));cb.appendChild(t);const bt=el("button","sm","Tham gia");bt.onclick=()=>window.open(m.call.url,"_blank","noopener");cb.appendChild(bt);x.appendChild(cb)}
       if(m.text)x.appendChild(el("span",null,mark(m.text,myCode())));
       x.appendChild(el("i",null,new Date(m.ts).toLocaleString("vi-VN",{hour:"2-digit",minute:"2-digit",day:"2-digit",month:"2-digit"})));
-      x.appendChild(wmkEl(d.id));box.appendChild(x)});
+      box.appendChild(x)});
     box.scrollTop=box.scrollHeight;}catch(err){box.replaceChildren(mkEmpty("⚠️","Lỗi hiển thị: "+err.message))}
   },e=>box.replaceChildren(mkEmpty("⚠️","Không đọc được tin nhắn ("+(e.code||"lỗi")+").")));
 }
@@ -315,8 +338,8 @@ async function download(gid,mid,f,btn){
   finally{btn.disabled=false;btn.textContent=old}
 }
 function viewImg(src){
-  const o=el("div","dlg"),i=el("img");i.src=src;i.style.cssText="max-width:100%;max-height:100%;border-radius:12px";
-  o.appendChild(i);o.onclick=()=>o.remove();document.body.appendChild(o);
+  const o=el("div","dlg"),w=el("span","picw"),i=el("img");i.src=src;i.style.cssText="max-width:100%;max-height:88vh;border-radius:12px;display:block";
+  w.appendChild(i);w.appendChild(picWM());o.appendChild(w);o.onclick=()=>o.remove();document.body.appendChild(o);
 }
 $("#clip").onclick=()=>$("#fi").click();
 $("#fi").onchange=e=>{const l=[...e.target.files];e.target.value="";if(l.length)sendFiles(l)};
@@ -334,7 +357,7 @@ $("#newg").onclick=()=>dlg((b,close)=>{
   const i=el("input");i.placeholder="Tên nhóm (vd: Ban cán sự, Quỹ lớp…)";b.appendChild(i);
   const ok=el("button","p","Tạo nhóm");
   ok.onclick=async()=>{const n=i.value.trim();if(!n)return;ok.disabled=true;
-    try{const r=await addDoc(collection(db,"groups"),{name:n.slice(0,80),members:[me],owner:me,created:Date.now()});close();setTimeout(()=>openG(r.id),400)}
+    try{const r=await addDoc(collection(db,"groups"),{name:n.slice(0,80),members:[...new Set([me,adminId()].filter(Boolean))],owner:me,created:Date.now()});close();setTimeout(()=>openG(r.id),400)}
     catch(e){toast("Không tạo được nhóm.");ok.disabled=false}};
   i.onkeydown=e=>{if(e.key==="Enter")ok.click()};
   b.appendChild(ok);i.focus();
@@ -352,12 +375,20 @@ $("#mem").onclick=()=>{
   const isOwner=g.owner===me;
   dlg((b,close)=>{
     b.appendChild(el("h2",null,"👥 "+g.name));
+    if(isOwner){
+      let gp=g.photo||"";const pv=el("div"),dr=()=>pv.replaceChildren(avatar(g.name,g.id,gp));dr();b.appendChild(pv);
+      const gf=el("input");gf.type="file";gf.accept="image/*";gf.onchange=async()=>{if(gf.files[0]){gp=await squarePhoto(gf.files[0]);dr()}};b.appendChild(gf);
+      const gn=el("input");gn.value=g.name;gn.placeholder="Tên nhóm";b.appendChild(gn);
+      const sv=el("button","p sm","Lưu tên và ảnh nhóm");
+      sv.onclick=async()=>{const t=gn.value.trim();if(!t)return;try{await updateDoc(doc(db,"groups",g.id),{name:t.slice(0,80),photo:gp});toast("Đã lưu");close()}catch(e){toast("Không lưu được.")}};
+      b.appendChild(sv);
+    }
     const list=el("div");b.appendChild(list);
     async function draw(){
       list.replaceChildren();
       for(const id of g.members){
         const c=el("span","chip",(id===me?"Bạn":await nameOf(id))+(id===g.owner?" ★":""));
-        if(isOwner&&id!==me){const x=el("button",null,"×");
+        if(isOwner&&id!==me&&id!==adminId()){const x=el("button",null,"×");
           x.onclick=async()=>{await updateDoc(doc(db,"groups",g.id),{members:arrayRemove(id)});g.members=g.members.filter(m=>m!==id);draw()};c.appendChild(x)}
         else c.style.paddingRight="12px";
         list.appendChild(c);
@@ -379,7 +410,7 @@ $("#mem").onclick=()=>{
           const hits=snap.docs.map(d=>({id:d.id,...d.data()})).filter(u=>!g.members.includes(u.id)&&toks.every(t=>(u.nameKey||"").includes(t)));
           if(!hits.length){res.appendChild(el("div","note","Không tìm thấy. Người đó cần đăng ký tài khoản trước và chưa ở trong nhóm."));return}
           hits.forEach(u=>{
-            const h=el("div","hit");h.appendChild(avatar(u.name,u.id));
+            const h=el("div","hit");h.appendChild(avatar(u.name,u.id,u.photo));
             const t=el("div","t");t.appendChild(el("b",null,u.name));t.appendChild(el("small",null,mask(u.email)));h.appendChild(t);
             const a=el("button","p sm","Thêm");
             a.onclick=async()=>{a.disabled=true;
@@ -400,34 +431,29 @@ $("#mem").onclick=()=>{
   });
 };
 /* ---------- Bảo mật (răn đe, không chặn tuyệt đối) ---------- */
+function wmURL(code,fs){
+  const w=Math.round(fs*5.4),h=Math.round(fs*2.7);
+  const svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+h+'"><text x="'+w/2+'" y="'+(h/2+fs*.35)+'" text-anchor="middle" transform="rotate(-20 '+w/2+' '+h/2+')" font-family="Arial,Helvetica,sans-serif" font-size="'+fs+'" font-weight="800" fill="#fff">'+code+'</text></svg>';
+  return 'url("data:image/svg+xml;utf8,'+encodeURIComponent(svg)+'")';
+}
 function setWM(){
-  const wm=$("#wm");if(!me){wm.hidden=true;return}
-  const t=(myName||"")+" · "+myCode();
-  const esc=t.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&apos;"}[c]));
-  const svg='<svg xmlns="http://www.w3.org/2000/svg" width="320" height="170"><text x="20" y="95" transform="rotate(-25 160 85)" font-family="sans-serif" font-size="14" font-weight="700" fill="#1e1b4b">'+esc+'</text></svg>';
-  wm.style.backgroundImage='url("data:image/svg+xml;utf8,'+encodeURIComponent(svg)+'")';
+  const wm=$("#wm");if(!me||!SHOW_WM){wm.hidden=true;return}
+  wm.style.backgroundImage=wmURL(myCode(),Math.max(24,Math.min(32,Math.round(innerWidth/50))));
   wm.hidden=false;
 }
-let hideT=null;
-const cover=on=>{$("#cover").hidden=!(on&&me)};
-function flash(ms){cover(true);clearTimeout(hideT);hideT=setTimeout(()=>cover(!document.hasFocus()),ms)}
-document.addEventListener("visibilitychange",()=>cover(document.hidden));
-if(!matchMedia("(pointer:coarse)").matches){window.addEventListener("blur",()=>cover(true));window.addEventListener("focus",()=>cover(false))}
-$("#cover").onclick=()=>cover(false);
-document.addEventListener("keydown",e=>{
-  if(!me)return;
-  const k=(e.key||"").toLowerCase();
-  if(k==="printscreen"||k==="meta"||k==="os"||(e.metaKey&&e.shiftKey))flash(3000);
-  if(((e.ctrlKey||e.metaKey)&&["p","s","u"].includes(k))||k==="f12"||(e.ctrlKey&&e.shiftKey&&["i","j","c"].includes(k))){e.preventDefault();flash(1500)}
-});
-document.addEventListener("keyup",e=>{
-  if(me&&(e.key||"").toLowerCase()==="printscreen"){try{navigator.clipboard.writeText("Không được chụp màn hình")}catch(x){}flash(3000)}
-});
-["contextmenu","dragstart"].forEach(t=>document.addEventListener(t,e=>{
-  if(me&&!/INPUT|TEXTAREA|SPAN/.test(e.target.tagName||""))e.preventDefault();
-}));
+window.addEventListener("resize",setWM);
+const picWM=()=>{if(!SHOW_WM)return document.createTextNode("");const d=el("span","picwm");d.style.backgroundImage=wmURL(myCode(),30);return d};
 /* ---------- Mã truy vết ẩn ---------- */
-const myCode=()=>me?me.slice(0,6).toUpperCase():"";
+let myCodeVal="";
+const myCode=()=>me?(myCodeVal||me.slice(0,6).toUpperCase()):"";
+async function loadCode(){
+  const r=doc(db,"secret",me);
+  try{
+    const g=await getDoc(r);
+    if(g.exists())myCodeVal=g.data().code||"";
+    else{const a=new Uint8Array(6);crypto.getRandomValues(a);const A="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";const c=[...a].map(x=>A[x%A.length]).join("");await setDoc(r,{code:c});myCodeVal=c}
+  }catch(e){try{const g=await getDoc(r);myCodeVal=g.exists()?g.data().code:""}catch(e2){myCodeVal=""}}
+}
 const ZS="\u200d",Z0="\u200b",Z1="\u200c";
 const encZW=str=>ZS+[...str].map(c=>c.charCodeAt(0).toString(2).padStart(8,"0")).join("").replace(/0/g,Z0).replace(/1/g,Z1)+ZS;
 const mark=(text,code)=>{if(!code)return text;const z=encZW(code);return text.replace(/(\S+)/g,"$1"+z)};
@@ -448,28 +474,30 @@ $("#trace").onclick=()=>dlg((b,close)=>{
   b.appendChild(el("b",null,"2) Hoặc tải ảnh chụp màn hình bị lộ"));
   const fi=el("input");fi.type="file";fi.accept="image/*";b.appendChild(fi);
   const cv=el("canvas");cv.style.cssText="max-width:100%;border-radius:10px;display:none";b.appendChild(cv);
-  const hint=el("div","note","Ảnh sẽ được tăng tương phản. Hãy tìm dòng chữ nhỏ dạng ABC123·xxxx lặp lại sau tin nhắn rồi nhập 6 ký tự đầu vào ô dưới.");hint.hidden=true;b.appendChild(hint);
+  const hint=el("div","note","Ảnh đã được làm rõ. Hãy tìm dòng chữ mờ (6 ký tự) lặp lại khắp ảnh, phóng to hoặc thu nhỏ để dễ đọc, rồi nhập vào ô dưới. Đổi “Cỡ mã” nếu không thấy.");hint.hidden=true;b.appendChild(hint);
   b.appendChild(el("b",null,"3) Mã đọc được từ ảnh (6 ký tự)"));
   const ci=el("input");ci.placeholder="vd: A1B2C3";b.appendChild(ci);
   const go=el("button","p","Tra cứu");b.appendChild(go);
   const out=el("div");out.style.cssText="display:flex;flex-direction:column;gap:7px";b.appendChild(out);
+  const sz=el("select");[["Cỡ mã nhỏ (mặc định)","s"],["Cỡ mã lớn (ảnh cũ)","l"]].forEach(([t,v])=>sz.appendChild(new Option(t,v)));fi.after(sz);
+  let curIm=null;
+  const enh=()=>{
+    const im=curIm;if(!im)return;const [b1,b2,g]=sz.value==="l"?[4,45,30]:[1.5,20,45];
+    const W=Math.min(im.width,1600),H=Math.round(im.height*W/im.width);
+    cv.width=W;cv.height=H;cv.style.display="block";hint.hidden=false;
+    const x=cv.getContext("2d");
+    x.filter="blur("+b1+"px)";x.drawImage(im,0,0,W,H);const a=x.getImageData(0,0,W,H);
+    x.filter="blur("+b2+"px)";x.drawImage(im,0,0,W,H);const c2=x.getImageData(0,0,W,H);x.filter="none";
+    for(let i=0;i<a.data.length;i+=4){
+      const d=(a.data[i]+a.data[i+1]+a.data[i+2]-c2.data[i]-c2.data[i+1]-c2.data[i+2])/3;
+      a.data[i]=a.data[i+1]=a.data[i+2]=Math.max(0,Math.min(255,128+d*g));a.data[i+3]=255;
+    }
+    x.putImageData(a,0,0);
+  };
+  sz.onchange=enh;
   fi.onchange=async()=>{
     const f=fi.files[0];if(!f)return;
-    try{
-      const u=URL.createObjectURL(f),im=await loadImg(u);URL.revokeObjectURL(u);
-      const W=Math.min(im.width,1600),H=Math.round(im.height*W/im.width);
-      cv.width=W;cv.height=H;cv.style.display="block";hint.hidden=false;
-      const x=cv.getContext("2d");x.drawImage(im,0,0,W,H);
-      const o=x.getImageData(0,0,W,H);
-      const sm=document.createElement("canvas");sm.width=Math.max(1,W>>2);sm.height=Math.max(1,H>>2);
-      sm.getContext("2d").drawImage(cv,0,0,sm.width,sm.height);x.drawImage(sm,0,0,W,H);
-      const bl=x.getImageData(0,0,W,H);
-      for(let i=0;i<o.data.length;i+=4){
-        const d=(o.data[i]+o.data[i+1]+o.data[i+2]-bl.data[i]-bl.data[i+1]-bl.data[i+2])/3;
-        o.data[i]=o.data[i+1]=o.data[i+2]=Math.max(0,Math.min(255,128+d*12));
-      }
-      x.putImageData(o,0,0);
-    }catch(e){toast("Không mở được ảnh.")}
+    try{const u=URL.createObjectURL(f);curIm=await loadImg(u);URL.revokeObjectURL(u);enh()}catch(e){toast("Không mở được ảnh.")}
   };
   go.onclick=async()=>{
     out.replaceChildren();
@@ -479,8 +507,9 @@ $("#trace").onclick=()=>dlg((b,close)=>{
     go.disabled=true;
     try{
       const us=(await getDocs(collection(db,"users"))).docs.map(d=>({id:d.id,...d.data()}));
+      const sec={};try{(await getDocs(collection(db,"secret"))).docs.forEach(d=>{sec[(d.data().code||"").toUpperCase()]=d.id})}catch(e){}
       Object.entries(codes).forEach(([code,n])=>{
-        const u=us.find(x=>x.id.slice(0,6).toUpperCase()===code.toUpperCase());
+        const u=us.find(x=>x.id===sec[code.toUpperCase()])||us.find(x=>x.id.slice(0,6).toUpperCase()===code.toUpperCase());
         const r=el("div","hit");const t=el("div","t");
         t.appendChild(el("b",null,u?u.name:"Không có người dùng khớp"));
         t.appendChild(el("small",null,"Mã "+code+(u?" · "+u.email:"")+" · xuất hiện "+n+" lần"));
@@ -489,6 +518,132 @@ $("#trace").onclick=()=>dlg((b,close)=>{
     }catch(e){out.appendChild(el("div","note","Không tra cứu được ("+(e.code||"lỗi")+")."))}
     go.disabled=false;
   };
+});
+/* ---------- Hồ sơ ---------- */
+async function squarePhoto(f){
+  const u=URL.createObjectURL(f);
+  try{const im=await loadImg(u),c=document.createElement("canvas");c.width=c.height=128;const m=Math.min(im.width,im.height);
+    c.getContext("2d").drawImage(im,(im.width-m)/2,(im.height-m)/2,m,m,0,0,128,128);return c.toDataURL("image/jpeg",.82)}
+  finally{URL.revokeObjectURL(u)}
+}
+$("#me").onclick=()=>dlg((b,close)=>{
+  b.appendChild(el("h2",null,"👤 Hồ sơ của bạn"));
+  let photo=(U[me]&&U[me].photo)||"";const pv=el("div"),dr=()=>pv.replaceChildren(avatar(myName,me,photo));dr();b.appendChild(pv);
+  const f=el("input");f.type="file";f.accept="image/*";f.onchange=async()=>{if(f.files[0]){photo=await squarePhoto(f.files[0]);dr()}};b.appendChild(f);
+  const n=el("input");n.value=myName;n.placeholder="Họ và tên";b.appendChild(n);
+  const ok=el("button","p","Lưu");
+  ok.onclick=async()=>{const nm=n.value.trim();if(!nm)return;ok.disabled=true;
+    try{await updateDoc(doc(db,"users",me),{name:nm,nameKey:norm(nm),keys:keysOf(nm),photo});await updateProfile(auth.currentUser,{displayName:nm});
+      myName=nm;$("#me").textContent="👤 "+nm;close();toast("Đã lưu hồ sơ")}catch(e){toast("Không lưu được.");ok.disabled=false}};
+  b.appendChild(ok);
+});
+/* ---------- Quản trị ---------- */
+const adminId=()=>Object.keys(U).find(id=>ADMINS.includes((U[id].email||"").toLowerCase()));
+let limitedAdmin=false;
+const uname=(id,fb)=>(U[id]&&U[id].name)||fb||"?";
+const when=t=>new Date(t).toLocaleString("vi-VN",{hour:"2-digit",minute:"2-digit",day:"2-digit",month:"2-digit"});
+const brief=m=>m.text?m.text.slice(0,80):m.img?"[ảnh]":m.file?"[tệp: "+m.file.name+"]":m.poll?"[bình chọn: "+m.poll.q+"]":m.call?"[cuộc gọi]":"";
+const allGroups=async()=>{try{const r=(await getDocs(collection(db,"groups"))).docs.map(d=>({id:d.id,...d.data()}));limitedAdmin=false;return r}catch(e){limitedAdmin=true;return groups.slice()}};
+async function tabGroups(body){
+  const gs=await allGroups();body.replaceChildren();
+  if(limitedAdmin)body.appendChild(el("div","note","Chế độ hạn chế: chỉ thấy nhóm mà bạn là thành viên. Nhóm mới tạo sẽ tự có bạn trong đó."));
+  if(!gs.length)body.appendChild(el("div","note","Chưa có nhóm nào."));
+  gs.forEach(g=>{
+    const r=el("div","hit");r.style.flexWrap="wrap";r.appendChild(avatar(g.name,g.id,g.photo));
+    const t=el("div","t");t.appendChild(el("b",null,g.name));t.appendChild(el("small",null,"Chủ nhóm: "+uname(g.owner)+" · "+(g.members||[]).length+" thành viên"));r.appendChild(t);
+    const v=el("button","sm","Xem");v.onclick=()=>viewGroup(g);
+    const rn=el("button","sm","Đổi tên");rn.onclick=async()=>{const n=prompt("Tên mới:",g.name);if(n&&n.trim()){try{await updateDoc(doc(db,"groups",g.id),{name:n.trim().slice(0,80)});tabGroups(body)}catch(e){toast("Chỉ chủ nhóm mới đổi được tên nhóm này.")}}};
+    const dl=el("button","sm","Xóa");dl.style.color="#e11d48";
+    dl.onclick=async()=>{if(!confirm("Xóa nhóm “"+g.name+"” cùng toàn bộ tin nhắn?"))return;
+      try{try{const ms=await getDocs(collection(db,"groups",g.id,"messages"));for(const m of ms.docs)await deleteDoc(m.ref)}catch(e){}await deleteDoc(doc(db,"groups",g.id));tabGroups(body)}catch(e){toast("Chỉ chủ nhóm mới xóa được nhóm này.")}};
+    [v,rn,dl].forEach(x=>r.appendChild(x));body.appendChild(r);
+  });
+}
+async function viewGroup(g){
+  const s=await getDocs(query(collection(db,"groups",g.id,"messages"),where("ts",">",0),orderBy("ts","desc"),limit(100)));
+  dlg(b=>{
+    b.style.width="min(560px,100%)";b.appendChild(el("h2",null,"👁 "+g.name));
+    b.appendChild(el("b",null,"Thành viên"));const mem=el("div");b.appendChild(mem);
+    const bad=()=>toast("Không thực hiện được (cần cập nhật quy tắc Firebase).");
+    const drawM=()=>{
+      mem.replaceChildren();
+      (g.members||[]).forEach(id=>{const c=el("span","chip",uname(id)+(id===g.owner?" ★":""));
+        const x=el("button",null,"×");x.onclick=async()=>{try{await updateDoc(doc(db,"groups",g.id),{members:arrayRemove(id)});g.members=g.members.filter(m=>m!==id);drawM()}catch(e){bad()}};
+        c.appendChild(x);mem.appendChild(c)});
+      const sel=el("select");sel.appendChild(new Option("+ Thêm thành viên…",""));
+      Object.entries(U).filter(([id])=>!(g.members||[]).includes(id)).forEach(([id,u])=>sel.appendChild(new Option(u.name+" ("+u.email+")",id)));
+      sel.onchange=async()=>{if(!sel.value)return;try{await updateDoc(doc(db,"groups",g.id),{members:arrayUnion(sel.value)});g.members.push(sel.value);drawM()}catch(e){bad()}};
+      mem.appendChild(sel);
+    };
+    drawM();
+    b.appendChild(el("b",null,"Tin nhắn gần đây"));
+    if(!s.size)b.appendChild(el("div","note","Chưa có tin nhắn."));
+    s.docs.slice().reverse().forEach(d=>{const m=d.data(),r=el("div","note");r.style.color="var(--tx)";
+      r.textContent=when(m.ts)+" · "+uname(m.uid,m.name)+": "+brief(m)+" ";
+      if(m.img){const im=el("img");im.src=m.img;im.style.cssText="display:block;max-height:90px;border-radius:8px;margin:4px 0";r.appendChild(im)}
+      const x=el("button","sm","🗑");x.onclick=async()=>{if(!confirm("Xóa tin nhắn này?"))return;try{await deleteDoc(d.ref);r.remove()}catch(e){bad()}};
+      r.appendChild(x);b.appendChild(r)});
+  });
+}
+async function tabUsers(body){
+  const byUid={};try{(await getDocs(collection(db,"secret"))).docs.forEach(d=>{byUid[d.id]=d.data().code})}catch(e){}
+  body.replaceChildren();
+  Object.entries(U).sort((a,b)=>(a[1].name||"").localeCompare(b[1].name||"","vi")).forEach(([id,u])=>{
+    const adm=ADMINS.includes((u.email||"").toLowerCase());
+    const r=el("div","hit");r.style.flexWrap="wrap";r.appendChild(avatar(u.name,id,u.photo));
+    const t=el("div","t");t.appendChild(el("b",null,u.name+(adm?" ★ admin":"")+(u.banned?" 🔒 đã khóa":"")));
+    t.appendChild(el("small",null,u.email+" · mã "+(byUid[id]||id.slice(0,6).toUpperCase())));
+    t.appendChild(el("small",null,"Hoạt động cuối: "+(u.lastSeen?when(u.lastSeen):"chưa rõ")));r.appendChild(t);
+    if(!adm){const k=el("button","sm",u.banned?"Mở khóa":"Khóa");
+      k.onclick=async()=>{try{await updateDoc(doc(db,"users",id),{banned:!u.banned});u.banned=!u.banned;tabUsers(body)}catch(e){toast("Không thực hiện được (cần cập nhật quy tắc Firebase).")}};r.appendChild(k)}
+    body.appendChild(r)});
+}
+async function tabAct(body){
+  const gs=await allGroups(),all=[];
+  for(const g of gs){const s=await getDocs(query(collection(db,"groups",g.id,"messages"),where("ts",">",0),orderBy("ts","desc"),limit(15)));s.docs.forEach(d=>all.push({g,m:d.data()}))}
+  all.sort((a,b)=>b.m.ts-a.m.ts);body.replaceChildren();
+  if(!all.length)body.appendChild(el("div","note","Chưa có hoạt động."));
+  all.slice(0,40).forEach(({g,m})=>{const r=el("div","hit"),t=el("div","t");
+    t.appendChild(el("b",null,uname(m.uid,m.name)+" → "+g.name));t.appendChild(el("small",null,when(m.ts)+" · "+brief(m)));r.appendChild(t);body.appendChild(r)});
+}
+$("#adm").onclick=()=>dlg(b=>{
+  b.style.width="min(640px,100%)";b.appendChild(el("h2",null,"🛠 Quản trị"));
+  const tabs=el("div","tabs"),body=el("div");body.style.cssText="display:flex;flex-direction:column;gap:8px";
+  const F={"Nhóm":tabGroups,"Người dùng":tabUsers,"Hoạt động":tabAct},T={};
+  const sel=n=>{Object.entries(T).forEach(([k,t])=>t.classList.toggle("on",k===n));body.replaceChildren(el("div","note","Đang tải…"));
+    Promise.resolve(F[n](body)).catch(e=>body.replaceChildren(el("div","note","Lỗi ("+(e.code||"")+"). Kiểm tra quy tắc Firestore.")))};
+  Object.keys(F).forEach(n=>{const t=el("button",null,n);t.type="button";t.onclick=()=>sel(n);T[n]=t;tabs.appendChild(t)});
+  b.appendChild(tabs);b.appendChild(body);sel("Nhóm");
+});
+/* ---------- Tiện ích & giải trí ---------- */
+const postMsg=async o=>{if(!cur)return;try{await addDoc(collection(db,"groups",cur,"messages"),{uid:me,name:myName,text:"",ts:Date.now(),...o})}catch(e){toast("Không gửi được.")}};
+function startCall(v){const url="https://meet.jit.si/CVTS-"+cur+(v?"":"#config.startWithVideoMuted=true");postMsg({call:{url,v}});window.open(url,"_blank","noopener")}
+function pollDlg(){dlg((b,close)=>{
+  b.appendChild(el("h2",null,"📊 Tạo bình chọn"));const q=el("input");q.placeholder="Câu hỏi";b.appendChild(q);
+  const os=[1,2,3,4].map(i=>{const o=el("input");o.placeholder="Lựa chọn "+i+(i>2?" (không bắt buộc)":"");b.appendChild(o);return o});
+  const ok=el("button","p","Đăng bình chọn");
+  ok.onclick=()=>{const o=os.map(x=>x.value.trim()).filter(Boolean);if(!q.value.trim()||o.length<2)return toast("Cần câu hỏi và ít nhất 2 lựa chọn.");
+    postMsg({poll:{q:q.value.trim().slice(0,200),o:o.map(x=>x.slice(0,100))}});close()};
+  b.appendChild(ok);
+})}
+$("#tools").onclick=()=>dlg((b,close)=>{
+  b.appendChild(el("h2",null,"🧰 Tiện ích & giải trí"));
+  const add=(t,f)=>{const x=el("button",null,t);x.onclick=()=>{close();f()};b.appendChild(x)};
+  add("📹 Gọi video cả nhóm",()=>startCall(true));
+  add("📞 Gọi thoại cả nhóm",()=>startCall(false));
+  add("📊 Tạo bình chọn",pollDlg);
+  add("🎲 Tung xúc xắc",()=>postMsg({text:"🎲 "+myName+" tung xúc xắc: "+(1+Math.floor(Math.random()*6))}));
+  add("🪙 Tung đồng xu",()=>postMsg({text:"🪙 "+myName+" tung đồng xu: "+(Math.random()<.5?"Sấp":"Ngửa")}));
+  add("🎯 Bốc thăm ngẫu nhiên",()=>{const v=prompt("Nhập các lựa chọn, cách nhau bằng dấu phẩy:");if(!v)return;const a=v.split(",").map(x=>x.trim()).filter(Boolean);if(a.length>1)postMsg({text:"🎯 Bốc thăm ("+a.join(", ")+"): "+a[Math.floor(Math.random()*a.length)]})});
+  add("👥 Chia đội ngẫu nhiên",()=>{const g=groups.find(x=>x.id===cur),n=parseInt(prompt("Chia thành mấy đội?","2"));if(!g||!(n>1))return;
+    const ms=g.members.map(id=>uname(id)).sort(()=>Math.random()-.5),t=Array.from({length:n},()=>[]);ms.forEach((m,i)=>t[i%n].push(m));
+    postMsg({text:"👥 Chia đội:\n"+t.map((a,i)=>"Đội "+(i+1)+": "+a.join(", ")).join("\n")})});
+});
+const EMO="😀😂🤣😊😍🥰😎🤔😅😭😡🥳👍👎👏🙏💪🔥🎉❤️💯✅❌⭐🌟💡📌📢⏰📚🍀🎂🍕☕".match(/\p{Extended_Pictographic}\uFE0F?/gu);
+$("#emo").onclick=()=>dlg(b=>{
+  b.appendChild(el("h2",null,"😊 Biểu tượng"));const g=el("div");g.style.cssText="display:grid;grid-template-columns:repeat(6,1fr);gap:6px";
+  EMO.forEach(e=>{const x=el("button",null,e);x.style.cssText="font-size:22px;text-align:center";x.onclick=()=>{const t=$("#in");t.value+=e;t.focus();b.parentNode.remove()};g.appendChild(x)});
+  b.appendChild(g);
 });
 setMode("login");
 </script>
