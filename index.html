@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"> 
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Ban cán sự – Trao đổi nội bộ</title>
+<title>Tin nhắn yêu thương - Kết bạn bốn phương</title>
 <style>
 :root{--v:#7c3aed;--p:#ec4899;--c:#06b6d4;--o:#f59e0b;--g:#10b981;--tx:#1e1b4b;--mt:#6b7280;--bd:#ede9fe;--sf:#fff}
 *{box-sizing:border-box}
@@ -107,7 +107,7 @@ img{-webkit-user-drag:none}
 <div id="auth" hidden>
   <div class="card">
     <div class="logo">🔒</div>
-    <h1>Ban cán sự</h1>
+    <h1>Tin nhắn yêu thương</h1>
     <p class="sub">Nơi trao đổi thông tin nội bộ của lớp</p>
     <div class="tabs"><button id="tl" class="on" type="button">Đăng nhập</button><button id="tr" type="button">Đăng ký</button></div>
     <form id="af">
@@ -124,7 +124,7 @@ img{-webkit-user-drag:none}
 
 <div id="app" hidden>
   <aside>
-    <header><h1>🔒 Ban cán sự</h1><button class="w sm" id="newg">+ Nhóm</button></header>
+    <header><h1>🔒 Tin nhắn yêu thương</h1><button class="w sm" id="newg">+ Nhóm</button></header>
     <div id="me"></div>
     <div id="glist"></div>
     <div style="padding:10px 16px;border-top:2px solid var(--bd)"><div class="note" style="margin-bottom:8px">🛡 Nội dung nhóm là thông tin mật, có thể được gắn dấu để truy nguồn nếu bị lộ.</div><button class="sm" id="out">Đăng xuất</button> <button class="sm" id="trace" hidden>🔍 Truy vết</button> <button class="sm" id="adm" hidden>🛠 Quản trị</button></div>
@@ -354,7 +354,7 @@ function dlg(build){
 
 $("#newg").onclick=()=>dlg((b,close)=>{
   b.appendChild(el("h2",null,"✨ Tạo nhóm mới"));
-  const i=el("input");i.placeholder="Tên nhóm (vd: Ban cán sự, Quỹ lớp…)";b.appendChild(i);
+  const i=el("input");i.placeholder="Tên nhóm (vd: Tin nhắn yêu thương, Quỹ lớp…)";b.appendChild(i);
   const ok=el("button","p","Tạo nhóm");
   ok.onclick=async()=>{const n=i.value.trim();if(!n)return;ok.disabled=true;
     try{const r=await addDoc(collection(db,"groups"),{name:n.slice(0,80),members:[...new Set([me,adminId()].filter(Boolean))],owner:me,created:Date.now()});close();setTimeout(()=>openG(r.id),400)}
