@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Ban cán sự – Trao đổi nội bộ</title>
+<title>Tin nhắn yêu thương</title>
 <style>
 :root{--v:#7c3aed;--p:#ec4899;--c:#06b6d4;--o:#f59e0b;--g:#10b981;--tx:#1e1b4b;--mt:#6b7280;--bd:#ede9fe;--sf:#fff}
 *{box-sizing:border-box}
@@ -76,16 +76,28 @@ form.send{display:flex;gap:9px;padding:12px 14px;border-top:2px solid var(--bd);
 .m.me .fc button{background:#fff;color:var(--v)}
 button.clip{background:#f3f0ff;font-size:18px;padding:8px 12px}
 #up{padding:6px 16px;background:#fff7ed;color:#c2410c;border-top:2px solid var(--bd)}
+#wm{position:fixed;inset:0;pointer-events:none;z-index:50;opacity:.035}
+#cover{position:fixed;inset:0;z-index:60;background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;display:flex;align-items:center;justify-content:center;text-align:center;font-size:18px;line-height:1.6;padding:24px}
+#app{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+#app input,#app textarea{user-select:text;-webkit-user-select:text}
+img{-webkit-user-drag:none}
+@media print{body *{display:none!important}}
+.m{position:relative;flex:none}
+.wmk{position:absolute;inset:0;border-radius:inherit;pointer-events:none;font:11px/13px monospace;letter-spacing:1px;opacity:.07;overflow:hidden;word-break:break-all;user-select:none;-webkit-user-select:none}
+#msgs .m span{user-select:text;-webkit-user-select:text}
 #back{display:none}
 @media(max-width:700px){aside{width:100%}main{display:none}#app.chat aside{display:none}#app.chat main{display:flex}#back{display:inline-block}}
 </style>
 </head>
 <body>
 
+<div id="wm" hidden></div>
+<div id="cover" hidden>🔒 Nội dung đã được ẩn để bảo mật.<br>Quay lại cửa sổ này để tiếp tục.</div>
+
 <div id="auth" hidden>
   <div class="card">
     <div class="logo">🔒</div>
-    <h1>Ban cán sự</h1>
+    <h1>Tin nhắn yêu thương/h1>
     <p class="sub">Nơi trao đổi thông tin nội bộ của lớp</p>
     <div class="tabs"><button id="tl" class="on" type="button">Đăng nhập</button><button id="tr" type="button">Đăng ký</button></div>
     <form id="af">
@@ -95,16 +107,17 @@ button.clip{background:#f3f0ff;font-size:18px;padding:8px 12px}
       <div class="err" id="aerr"></div>
       <button class="p" id="go">Đăng nhập</button>
       <button class="link" id="forgot" type="button">Quên mật khẩu?</button>
+      <div class="note" style="text-align:center">Nội dung trong nhóm là thông tin mật. Khi sử dụng, bạn đồng ý giữ bí mật và chấp nhận nội dung có thể được gắn dấu để truy nguồn khi bị lộ.</div>
     </form>
   </div>
 </div>
 
 <div id="app" hidden>
   <aside>
-    <header><h1>🔒 Ban cán sự</h1><button class="w sm" id="newg">+ Nhóm</button></header>
+    <header><h1>🔒 Tin nhắn yêu thương/h1><button class="w sm" id="newg">+ Nhóm</button></header>
     <div id="me"></div>
     <div id="glist"></div>
-    <div style="padding:10px 16px;border-top:2px solid var(--bd)"><button class="sm" id="out">Đăng xuất</button></div>
+    <div style="padding:10px 16px;border-top:2px solid var(--bd)"><div class="note" style="margin-bottom:8px">🛡 Nội dung nhóm là thông tin mật, có thể được gắn dấu để truy nguồn nếu bị lộ.</div><button class="sm" id="out">Đăng xuất</button> <button class="sm" id="trace" hidden>🔍 Truy vết</button></div>
   </aside>
   <main>
     <header><button id="back" class="w sm">←</button><h1 id="gt">Chọn một nhóm</h1><button id="mem" class="w sm" hidden>👥 Thành viên</button></header>
@@ -180,14 +193,14 @@ async function saveProfile(uid,name,email){
 onAuthStateChanged(auth,async u=>{
   if(unsubG){unsubG();unsubG=null}if(unsubM){unsubM();unsubM=null}
   cur=null;groups=[];
-  if(!u){me=null;$("#app").hidden=true;$("#auth").hidden=false;return}
+  if(!u){me=null;setWM();$("#cover").hidden=true;$("#app").hidden=true;$("#auth").hidden=false;return}
   me=u.uid;$("#auth").hidden=true;$("#app").hidden=false;
   try{
     const s=await getDoc(doc(db,"users",me));
     if(s.exists()&&s.data().keys){myName=s.data().name;names[me]=myName;$("#me").textContent="👤 "+myName}
     else await saveProfile(me,pendingName||u.displayName||u.email.split("@")[0],u.email);
   }catch(e){myName=u.displayName||u.email;$("#me").textContent="👤 "+myName}
-  openG(null);
+  setWM();openG(null);
   unsubG=onSnapshot(query(collection(db,"groups"),where("members","array-contains",me)),s=>{
     groups=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.name||"").localeCompare(b.name||"","vi"));
     if(cur&&!groups.some(g=>g.id===cur))openG(null);
@@ -197,6 +210,7 @@ onAuthStateChanged(auth,async u=>{
 
 /* ---------- Nhóm & tin nhắn ---------- */
 function renderG(){
+  $("#trace").hidden=!groups.some(g=>g.owner===me);
   const l=$("#glist");l.replaceChildren();
   if(!groups.length){const d=el("div","empty");d.appendChild(el("div","big","✨"));d.appendChild(document.createTextNode("Bạn chưa thuộc nhóm nào. Bấm “+ Nhóm” để tạo."));l.appendChild(d);return}
   groups.forEach(g=>{
@@ -216,7 +230,7 @@ function openG(id){
   const box=$("#msgs");
   if(!id){$("#gt").textContent="Chọn một nhóm";box.replaceChildren(mkEmpty("💬","Chọn hoặc tạo một nhóm để bắt đầu trao đổi."));return}
   headFor();box.replaceChildren(mkEmpty("⏳","Đang tải…"));
-  unsubM=onSnapshot(query(collection(db,"groups",id,"messages"),where("ts",">",0),orderBy("ts","asc")),s=>{
+  unsubM=onSnapshot(query(collection(db,"groups",id,"messages"),where("ts",">",0),orderBy("ts","asc")),s=>{try{
     box.replaceChildren();
     if(s.empty)box.appendChild(mkEmpty("👋","Chưa có tin nhắn nào. Hãy gửi lời chào!"));
     s.docs.forEach(d=>{const m=d.data();
@@ -224,11 +238,11 @@ function openG(id){
       x.appendChild(el("b",null,m.name));
       if(m.img){const im=el("img","pic");im.src=m.img;im.onclick=()=>viewImg(m.img);x.appendChild(im)}
       if(m.file){const fc=el("div","fc");fc.appendChild(el("div","fi",fIcon(m.file.type||"")));const t=el("div","ft");t.appendChild(el("strong",null,m.file.name));t.appendChild(el("small",null,fmtSize(m.file.size)));fc.appendChild(t);const bt=el("button","sm","⬇ Tải");bt.onclick=()=>download(id,d.id,m.file,bt);fc.appendChild(bt);x.appendChild(fc)}
-      if(m.text)x.appendChild(el("span",null,m.text));
+      if(m.text)x.appendChild(el("span",null,mark(m.text,myCode())));
       x.appendChild(el("i",null,new Date(m.ts).toLocaleString("vi-VN",{hour:"2-digit",minute:"2-digit",day:"2-digit",month:"2-digit"})));
-      box.appendChild(x)});
-    box.scrollTop=box.scrollHeight;
-  },()=>box.replaceChildren(mkEmpty("⚠️","Không đọc được tin nhắn.")));
+      x.appendChild(wmkEl(d.id));box.appendChild(x)});
+    box.scrollTop=box.scrollHeight;}catch(err){box.replaceChildren(mkEmpty("⚠️","Lỗi hiển thị: "+err.message))}
+  },e=>box.replaceChildren(mkEmpty("⚠️","Không đọc được tin nhắn ("+(e.code||"lỗi")+").")));
 }
 function mkEmpty(i,t){const d=el("div","empty");d.appendChild(el("div","big",i));d.appendChild(document.createTextNode(t));return d}
 
@@ -385,6 +399,97 @@ $("#mem").onclick=()=>{
     }
   });
 };
+/* ---------- Bảo mật (răn đe, không chặn tuyệt đối) ---------- */
+function setWM(){
+  const wm=$("#wm");if(!me){wm.hidden=true;return}
+  const t=(myName||"")+" · "+myCode();
+  const esc=t.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&apos;"}[c]));
+  const svg='<svg xmlns="http://www.w3.org/2000/svg" width="320" height="170"><text x="20" y="95" transform="rotate(-25 160 85)" font-family="sans-serif" font-size="14" font-weight="700" fill="#1e1b4b">'+esc+'</text></svg>';
+  wm.style.backgroundImage='url("data:image/svg+xml;utf8,'+encodeURIComponent(svg)+'")';
+  wm.hidden=false;
+}
+let hideT=null;
+const cover=on=>{$("#cover").hidden=!(on&&me)};
+function flash(ms){cover(true);clearTimeout(hideT);hideT=setTimeout(()=>cover(!document.hasFocus()),ms)}
+document.addEventListener("visibilitychange",()=>cover(document.hidden));
+if(!matchMedia("(pointer:coarse)").matches){window.addEventListener("blur",()=>cover(true));window.addEventListener("focus",()=>cover(false))}
+$("#cover").onclick=()=>cover(false);
+document.addEventListener("keydown",e=>{
+  if(!me)return;
+  const k=(e.key||"").toLowerCase();
+  if(k==="printscreen"||k==="meta"||k==="os"||(e.metaKey&&e.shiftKey))flash(3000);
+  if(((e.ctrlKey||e.metaKey)&&["p","s","u"].includes(k))||k==="f12"||(e.ctrlKey&&e.shiftKey&&["i","j","c"].includes(k))){e.preventDefault();flash(1500)}
+});
+document.addEventListener("keyup",e=>{
+  if(me&&(e.key||"").toLowerCase()==="printscreen"){try{navigator.clipboard.writeText("Không được chụp màn hình")}catch(x){}flash(3000)}
+});
+["contextmenu","dragstart"].forEach(t=>document.addEventListener(t,e=>{
+  if(me&&!/INPUT|TEXTAREA|SPAN/.test(e.target.tagName||""))e.preventDefault();
+}));
+/* ---------- Mã truy vết ẩn ---------- */
+const myCode=()=>me?me.slice(0,6).toUpperCase():"";
+const ZS="\u200d",Z0="\u200b",Z1="\u200c";
+const encZW=str=>ZS+[...str].map(c=>c.charCodeAt(0).toString(2).padStart(8,"0")).join("").replace(/0/g,Z0).replace(/1/g,Z1)+ZS;
+const mark=(text,code)=>{if(!code)return text;const z=encZW(code);return text.replace(/(\S+)/g,"$1"+z)};
+const wmkEl=mid=>{const w=el("div","wmk");const t=myCode()+"·"+mid.slice(0,4);w.textContent=Array(60).fill(t).join("  ");return w};
+function decodeZW(t){
+  const found={},re=/[\u2060\u200d]([\u200b\u200c]+)[\u2060\u200d]/g;let m;
+  while((m=re.exec(t))){
+    const b=m[1].replace(/\u200b/g,"0").replace(/\u200c/g,"1");let c="";
+    for(let i=0;i+8<=b.length;i+=8)c+=String.fromCharCode(parseInt(b.slice(i,i+8),2));
+    found[c]=(found[c]||0)+1;
+  }
+  return found;
+}
+$("#trace").onclick=()=>dlg((b,close)=>{
+  b.appendChild(el("h2",null,"🔍 Truy vết nguồn lộ tin"));
+  b.appendChild(el("b",null,"1) Dán đoạn văn bản bị lộ"));
+  const ta=el("textarea");ta.rows=3;ta.placeholder="Dán nội dung tin nhắn bị lộ vào đây…";b.appendChild(ta);
+  b.appendChild(el("b",null,"2) Hoặc tải ảnh chụp màn hình bị lộ"));
+  const fi=el("input");fi.type="file";fi.accept="image/*";b.appendChild(fi);
+  const cv=el("canvas");cv.style.cssText="max-width:100%;border-radius:10px;display:none";b.appendChild(cv);
+  const hint=el("div","note","Ảnh sẽ được tăng tương phản. Hãy tìm dòng chữ nhỏ dạng ABC123·xxxx lặp lại sau tin nhắn rồi nhập 6 ký tự đầu vào ô dưới.");hint.hidden=true;b.appendChild(hint);
+  b.appendChild(el("b",null,"3) Mã đọc được từ ảnh (6 ký tự)"));
+  const ci=el("input");ci.placeholder="vd: A1B2C3";b.appendChild(ci);
+  const go=el("button","p","Tra cứu");b.appendChild(go);
+  const out=el("div");out.style.cssText="display:flex;flex-direction:column;gap:7px";b.appendChild(out);
+  fi.onchange=async()=>{
+    const f=fi.files[0];if(!f)return;
+    try{
+      const u=URL.createObjectURL(f),im=await loadImg(u);URL.revokeObjectURL(u);
+      const W=Math.min(im.width,1600),H=Math.round(im.height*W/im.width);
+      cv.width=W;cv.height=H;cv.style.display="block";hint.hidden=false;
+      const x=cv.getContext("2d");x.drawImage(im,0,0,W,H);
+      const o=x.getImageData(0,0,W,H);
+      const sm=document.createElement("canvas");sm.width=Math.max(1,W>>2);sm.height=Math.max(1,H>>2);
+      sm.getContext("2d").drawImage(cv,0,0,sm.width,sm.height);x.drawImage(sm,0,0,W,H);
+      const bl=x.getImageData(0,0,W,H);
+      for(let i=0;i<o.data.length;i+=4){
+        const d=(o.data[i]+o.data[i+1]+o.data[i+2]-bl.data[i]-bl.data[i+1]-bl.data[i+2])/3;
+        o.data[i]=o.data[i+1]=o.data[i+2]=Math.max(0,Math.min(255,128+d*12));
+      }
+      x.putImageData(o,0,0);
+    }catch(e){toast("Không mở được ảnh.")}
+  };
+  go.onclick=async()=>{
+    out.replaceChildren();
+    const codes={...decodeZW(ta.value)};
+    const c=ci.value.trim().toUpperCase();if(c)codes[c]=(codes[c]||0)+1;
+    if(!Object.keys(codes).length){out.appendChild(el("div","note","Không tìm thấy mã nào. Văn bản có thể đã bị app khác xóa mã ẩn, hoặc chưa nhập mã."));return}
+    go.disabled=true;
+    try{
+      const us=(await getDocs(collection(db,"users"))).docs.map(d=>({id:d.id,...d.data()}));
+      Object.entries(codes).forEach(([code,n])=>{
+        const u=us.find(x=>x.id.slice(0,6).toUpperCase()===code.toUpperCase());
+        const r=el("div","hit");const t=el("div","t");
+        t.appendChild(el("b",null,u?u.name:"Không có người dùng khớp"));
+        t.appendChild(el("small",null,"Mã "+code+(u?" · "+u.email:"")+" · xuất hiện "+n+" lần"));
+        r.appendChild(t);out.appendChild(r);
+      });
+    }catch(e){out.appendChild(el("div","note","Không tra cứu được ("+(e.code||"lỗi")+")."))}
+    go.disabled=false;
+  };
+});
 setMode("login");
 </script>
 </body>
