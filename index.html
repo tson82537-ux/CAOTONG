@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Tin nhắn yêu thương - Kết bạn bốn phương</title>
+<title>Ban cán sự – Trao đổi nội bộ</title>
 <style>
 :root{--v:#7c3aed;--p:#ec4899;--c:#06b6d4;--o:#f59e0b;--g:#10b981;--tx:#1e1b4b;--mt:#6b7280;--bd:#ede9fe;--sf:#fff}
 *{box-sizing:border-box}
@@ -66,6 +66,16 @@ form.send{display:flex;gap:9px;padding:12px 14px;border-top:2px solid var(--bd);
 .hit small{color:var(--mt);display:block}
 .note{font-size:12px;color:var(--mt)}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--tx);color:#fff;padding:10px 18px;border-radius:99px;z-index:30;font-size:14px}
+.pic{display:block;max-width:100%;max-height:320px;border-radius:12px;margin:4px 0;cursor:zoom-in}
+.fc{display:flex;gap:10px;align-items:center;background:#f3f0ff;color:var(--tx);border-radius:12px;padding:8px 10px;margin:4px 0}
+.m.me .fc{background:#ffffff2e;color:#fff}
+.fc .fi{font-size:26px}
+.fc .ft{flex:1;min-width:0}
+.fc .ft strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fc small{opacity:.7}
+.m.me .fc button{background:#fff;color:var(--v)}
+button.clip{background:#f3f0ff;font-size:18px;padding:8px 12px}
+#up{padding:6px 16px;background:#fff7ed;color:#c2410c;border-top:2px solid var(--bd)}
 #back{display:none}
 @media(max-width:700px){aside{width:100%}main{display:none}#app.chat aside{display:none}#app.chat main{display:flex}#back{display:inline-block}}
 </style>
@@ -75,8 +85,8 @@ form.send{display:flex;gap:9px;padding:12px 14px;border-top:2px solid var(--bd);
 <div id="auth" hidden>
   <div class="card">
     <div class="logo">🔒</div>
-    <h1>Tin nhắn yêu thương</h1>
-    <p class="sub">Nơi trao đổi thông tin nội bộ</p>
+    <h1>Ban cán sự</h1>
+    <p class="sub">Nơi trao đổi thông tin nội bộ của lớp</p>
     <div class="tabs"><button id="tl" class="on" type="button">Đăng nhập</button><button id="tr" type="button">Đăng ký</button></div>
     <form id="af">
       <input id="an" placeholder="Họ và tên" autocomplete="name" hidden>
@@ -91,7 +101,7 @@ form.send{display:flex;gap:9px;padding:12px 14px;border-top:2px solid var(--bd);
 
 <div id="app" hidden>
   <aside>
-    <header><h1>🔒 Tin nhắn yêu thương</h1><button class="w sm" id="newg">+ Nhóm</button></header>
+    <header><h1>🔒 Ban cán sự</h1><button class="w sm" id="newg">+ Nhóm</button></header>
     <div id="me"></div>
     <div id="glist"></div>
     <div style="padding:10px 16px;border-top:2px solid var(--bd)"><button class="sm" id="out">Đăng xuất</button></div>
@@ -99,7 +109,8 @@ form.send{display:flex;gap:9px;padding:12px 14px;border-top:2px solid var(--bd);
   <main>
     <header><button id="back" class="w sm">←</button><h1 id="gt">Chọn một nhóm</h1><button id="mem" class="w sm" hidden>👥 Thành viên</button></header>
     <div id="msgs"><div class="empty"><div class="big">💬</div>Chọn hoặc tạo một nhóm để bắt đầu trao đổi.</div></div>
-    <form class="send" id="f" hidden><textarea id="in" rows="1" placeholder="Nhập tin nhắn…"></textarea><button class="p">Gửi</button></form>
+    <div class="note" id="up" hidden></div>
+    <form class="send" id="f" hidden><button type="button" class="clip" id="clip" title="Đính kèm ảnh hoặc tệp">📎</button><input type="file" id="fi" multiple hidden><textarea id="in" rows="1" placeholder="Nhập tin nhắn…"></textarea><button class="p">Gửi</button></form>
   </main>
 </div>
 
@@ -205,12 +216,15 @@ function openG(id){
   const box=$("#msgs");
   if(!id){$("#gt").textContent="Chọn một nhóm";box.replaceChildren(mkEmpty("💬","Chọn hoặc tạo một nhóm để bắt đầu trao đổi."));return}
   headFor();box.replaceChildren(mkEmpty("⏳","Đang tải…"));
-  unsubM=onSnapshot(query(collection(db,"groups",id,"messages"),orderBy("ts","asc")),s=>{
+  unsubM=onSnapshot(query(collection(db,"groups",id,"messages"),where("ts",">",0),orderBy("ts","asc")),s=>{
     box.replaceChildren();
     if(s.empty)box.appendChild(mkEmpty("👋","Chưa có tin nhắn nào. Hãy gửi lời chào!"));
     s.docs.forEach(d=>{const m=d.data();
       const x=el("div","m"+(m.uid===me?" me":""));
-      x.appendChild(el("b",null,m.name));x.appendChild(el("span",null,m.text));
+      x.appendChild(el("b",null,m.name));
+      if(m.img){const im=el("img","pic");im.src=m.img;im.onclick=()=>viewImg(m.img);x.appendChild(im)}
+      if(m.file){const fc=el("div","fc");fc.appendChild(el("div","fi",fIcon(m.file.type||"")));const t=el("div","ft");t.appendChild(el("strong",null,m.file.name));t.appendChild(el("small",null,fmtSize(m.file.size)));fc.appendChild(t);const bt=el("button","sm","⬇ Tải");bt.onclick=()=>download(id,d.id,m.file,bt);fc.appendChild(bt);x.appendChild(fc)}
+      if(m.text)x.appendChild(el("span",null,m.text));
       x.appendChild(el("i",null,new Date(m.ts).toLocaleString("vi-VN",{hour:"2-digit",minute:"2-digit",day:"2-digit",month:"2-digit"})));
       box.appendChild(x)});
     box.scrollTop=box.scrollHeight;
@@ -224,6 +238,75 @@ $("#f").onsubmit=async e=>{
   catch(x){toast("Không gửi được tin nhắn.");$("#in").value=t}
 };
 $("#in").onkeydown=e=>{if(e.key==="Enter"&&!e.shiftKey&&!e.isComposing){e.preventDefault();$("#f").requestSubmit()}};
+/* ---------- Gửi ảnh và tệp ---------- */
+const MAXF=5*1024*1024,CH=600000;
+const fmtSize=n=>n<1024?n+" B":n<1048576?(n/1024).toFixed(0)+" KB":(n/1048576).toFixed(1)+" MB";
+const fIcon=t=>t.startsWith("video/")?"🎬":t.startsWith("audio/")?"🎵":t.includes("pdf")?"📕":/word|document/.test(t)?"📘":/sheet|excel|csv/.test(t)?"📗":/presentation|powerpoint/.test(t)?"📙":/zip|rar|7z/.test(t)?"🗜️":"📄";
+const readURL=f=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(f)});
+const loadImg=u=>new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=u});
+async function compress(f){
+  const url=URL.createObjectURL(f);
+  try{
+    const im=await loadImg(url);let max=1280,q=.8,out="";
+    for(let k=0;k<6;k++){
+      const sc=Math.min(1,max/Math.max(im.width,im.height));
+      const c=document.createElement("canvas");c.width=Math.round(im.width*sc);c.height=Math.round(im.height*sc);
+      const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);
+      out=c.toDataURL("image/jpeg",q);
+      if(out.length<800000)return out;
+      max=Math.round(max*.75);q=Math.max(.5,q-.08);
+    }
+    return out.length<900000?out:null;
+  }finally{URL.revokeObjectURL(url)}
+}
+let busy=false;
+async function sendFiles(list){
+  if(!cur||busy)return;busy=true;
+  const gid=cur,cap=$("#in").value.trim(),up=$("#up");let first=true;up.hidden=false;
+  try{
+    for(const f of list){
+      const base={uid:me,name:myName,text:first?cap.slice(0,4000):"",ts:Date.now()};
+      const ref=doc(collection(db,"groups",gid,"messages"));
+      if(/^image\/(jpeg|png|webp|bmp)$/.test(f.type)){
+        up.textContent="Đang xử lý ảnh…";
+        const d=await compress(f);
+        if(!d){toast("Ảnh “"+f.name+"” quá lớn.");continue}
+        await setDoc(ref,{...base,img:d});
+      }else{
+        if(f.size>MAXF){toast("“"+f.name+"” lớn hơn 5 MB, không gửi được.");continue}
+        const b64=(await readURL(f)).split(",")[1]||"";
+        const n=Math.max(1,Math.ceil(b64.length/CH));
+        for(let i=0;i<n;i++){
+          up.textContent="Đang gửi “"+f.name+"”… "+(i+1)+"/"+n;
+          await addDoc(collection(db,"groups",gid,"messages"),{uid:me,fid:ref.id,i,d:b64.slice(i*CH,(i+1)*CH),ts:-1});
+        }
+        await setDoc(ref,{...base,file:{name:f.name,size:f.size,type:f.type||"application/octet-stream",parts:n}});
+      }
+      if(first&&cap)$("#in").value="";
+      first=false;
+    }
+  }catch(e){toast("Không gửi được ("+(e.code||"lỗi")+").")}
+  finally{busy=false;up.hidden=true}
+}
+async function download(gid,mid,f,btn){
+  btn.disabled=true;const old=btn.textContent;btn.textContent="Đang tải…";
+  try{
+    const s=await getDocs(query(collection(db,"groups",gid,"messages"),where("fid","==",mid)));
+    const b64=s.docs.map(d=>d.data()).sort((a,b)=>a.i-b.i).map(d=>d.d).join("");
+    const blob=await (await fetch("data:"+f.type+";base64,"+b64)).blob();
+    const u=URL.createObjectURL(blob),a=document.createElement("a");
+    a.href=u;a.download=f.name;document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(u),5000);
+  }catch(e){toast("Không tải được tệp.")}
+  finally{btn.disabled=false;btn.textContent=old}
+}
+function viewImg(src){
+  const o=el("div","dlg"),i=el("img");i.src=src;i.style.cssText="max-width:100%;max-height:100%;border-radius:12px";
+  o.appendChild(i);o.onclick=()=>o.remove();document.body.appendChild(o);
+}
+$("#clip").onclick=()=>$("#fi").click();
+$("#fi").onchange=e=>{const l=[...e.target.files];e.target.value="";if(l.length)sendFiles(l)};
+$("#in").addEventListener("paste",e=>{const l=[...(e.clipboardData&&e.clipboardData.files||[])];if(l.length){e.preventDefault();sendFiles(l)}});
 $("#back").onclick=()=>openG(null);
 
 function dlg(build){
