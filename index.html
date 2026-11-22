@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ban cán sự – Trao đổi nội bộ</title>
+<style>
+:root{--bg:#f6f7f9;--sf:#fff;--tx:#1c2430;--mt:#6b7686;--bd:#e1e5ea;--ac:#1d6fd8;--acx:#fff;--me:#dcebff;--box-sizing:border-box;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14171c;--sf:#1d222a;--tx:#e8ecf1;--mt:#8f9aa9;--bd:#2c333d;--ac:#4a97f5;--acx:#0b1220;--me:#1f3552;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#14171c;--sf:#1d222a;--tx:#e8ecf1;--mt:#8f9aa9;--bd:#2c333d;--ac:#4a97f5;--acx:#0b1220;--me:#1f3552;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+#app{display:flex;height:100%}
+aside{width:290px;background:var(--sf);border-right:1px solid var(--bd);display:flex;flex-direction:column;flex:none}
+main{flex:1;display:flex;flex-direction:column;min-width:0}
+header{padding:12px 14px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:8px;background:var(--sf)}
+h1{font-size:16px;margin:0;flex:1}
+button{font:inherit;cursor:pointer;border:1px solid var(--bd);background:var(--sf);color:var(--tx);border-radius:8px;padding:7px 12px}
+button.p{background:var(--ac);color:var(--acx);border-color:var(--ac);font-weight:600}
+button.sm{padding:4px 9px;font-size:13px}
+input,textarea{font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:8px 10px;width:100%}
+#glist{overflow:auto;flex:1}
+.g{padding:11px 14px;border-bottom:1px solid var(--bd);cursor:pointer}
+.g.on{background:var(--me)}
+.g small{color:var(--mt);display:block}
+#msgs{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:8px}
+.m{max-width:min(78%,560px);background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:7px 11px;align-self:flex-start}
+.m.me{background:var(--me);align-self:flex-end}
+.m b{font-size:12px;color:var(--mt);display:block}
+.m span{white-space:pre-wrap;overflow-wrap:anywhere}
+.m i{font-size:11px;color:var(--mt);font-style:normal}
+form,.row{display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--bd);background:var(--sf)}
+.empty{margin:auto;color:var(--mt);text-align:center;padding:20px}
+.dlg{position:fixed;inset:0;background:#0008;display:flex;align-items:center;justify-content:center;padding:16px;z-index:20}
+.dlg>div{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:16px;width:min(420px,100%);max-height:85%;overflow:auto;display:flex;flex-direction:column;gap:10px}
+.chip{display:inline-flex;gap:6px;align-items:center;background:var(--bg);border:1px solid var(--bd);border-radius:99px;padding:2px 10px;margin:2px;font-size:13px}
+.hit{padding:7px 10px;border:1px solid var(--bd);border-radius:8px;cursor:pointer}
+.note{font-size:12px;color:var(--mt)}
+#back{display:none}
+@media(max-width:700px){aside{width:100%}main{display:none}#app.chat aside{display:none}#app.chat main{display:flex}#back{display:inline-block}}
+</style>
+</head>
+<body>
+<div id="app">
+  <aside>
+    <header><h1>🔒 Ban cán sự</h1><button class="p sm" id="newg">+ Nhóm</button></header>
+    <div id="glist"></div>
+    <div class="note" style="padding:10px 14px">Chỉ thành viên của nhóm mới thấy nhóm và tin nhắn trong ứng dụng này.</div>
+  </aside>
+  <main>
+    <header><button id="back" class="sm">←</button><h1 id="gt">Chọn một nhóm</h1><button id="mem" class="sm" hidden>Thành viên</button></header>
+    <div id="msgs"><div class="empty">Chọn hoặc tạo một nhóm để bắt đầu trao đổi.</div></div>
+    <form id="f" hidden><textarea id="in" rows="1" placeholder="Nhập tin nhắn…"></textarea><button class="p">Gửi</button></form>
+  </main>
+</div>
+<script>
+var $=function(s){return document.querySelector(s)};
+var db,user,me,groups=[],cur=null,unsubG=null,unsubM=null,names={};
+function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+function fail(t){$("#glist").replaceChildren(el("div","empty",t))}
+async function nm(ids){
+  try{var ps=await user.profiles(ids);ids.forEach(function(i){names[i]=(ps[i]&&ps[i].name)||"Thành viên"})}catch(e){}
+}
+function dname(i){return i===me?"Bạn":(names[i]||"Thành viên")}
+async function init(){
+  fail("Đang tải…");
+  try{db=await claude.use("db");user=await claude.use("user")}catch(e){}
+  if(!db||!user){fail("Cần đăng nhập và mở trong Claude để sử dụng ứng dụng.");return}
+  me=await user.id();
+  if(!me){fail("Không xác định được tài khoản của bạn.");return}
+  var t=setTimeout(function(){fail("Không tải được dữ liệu. Hãy mở lại trang.")},10000);
+  unsubG=db.collection("groups").onSnapshot(async function(s){
+    clearTimeout(t);
+    groups=s.docs.map(function(d){var x=d.data();x.id=d.id;return x}).filter(function(g){return (g.members||[]).indexOf(me)>-1});
+    groups.sort(function(a,b){return (a.name||"").localeCompare(b.name||"","vi")});
+    if(cur&&!groups.some(function(g){return g.id===cur})){cur=null;openG(null)}
+    renderG();
+    if(cur)headFor();
+  },function(){clearTimeout(t);fail("Không có quyền đọc dữ liệu.")});
+}
+function renderG(){
+  var l=$("#glist");l.replaceChildren();
+  if(!groups.length){l.appendChild(el("div","empty","Bạn chưa thuộc nhóm nào. Bấm “+ Nhóm” để tạo."));return}
+  groups.forEach(function(g){
+    var d=el("div","g"+(g.id===cur?" on":""));
+    d.appendChild(el("b",null,g.name));
+    d.appendChild(el("small",null,(g.members||[]).length+" thành viên"));
+    d.onclick=function(){openG(g.id)};
+    l.appendChild(d);
+  });
+}
+function headFor(){var g=groups.find(function(x){return x.id===cur});if(g)$("#gt").textContent=g.name}
+function openG(id){
+  cur=id;if(unsubM){unsubM();unsubM=null}
+  renderG();
+  $("#app").classList.toggle("chat",!!id);
+  $("#f").hidden=!id;$("#mem").hidden=!id;
+  if(!id){$("#gt").textContent="Chọn một nhóm";$("#msgs").replaceChildren(el("div","empty","Chọn hoặc tạo một nhóm để bắt đầu trao đổi."));return}
+  headFor();
+  $("#msgs").replaceChildren(el("div","empty","Đang tải…"));
+  unsubM=db.collection("groups").doc(id).collection("messages").orderBy("ts","asc").onSnapshot(async function(s){
+    var arr=s.docs.map(function(d){return d.data()});
+    await nm(Array.from(new Set(arr.map(function(m){return m.uid}))));
+    var box=$("#msgs");box.replaceChildren();
+    if(!arr.length)box.appendChild(el("div","empty","Chưa có tin nhắn nào."));
+    arr.forEach(function(m){
+      var d=el("div","m"+(m.uid===me?" me":""));
+      d.appendChild(el("b",null,dname(m.uid)));
+      d.appendChild(el("span",null,m.text));
+      var tm=new Date(m.ts);d.appendChild(el("i",null," "+tm.toLocaleString("vi-VN",{hour:"2-digit",minute:"2-digit",day:"2-digit",month:"2-digit"})));
+      box.appendChild(d);
+    });
+    box.scrollTop=box.scrollHeight;
+  },function(){$("#msgs").replaceChildren(el("div","empty","Không đọc được tin nhắn."))});
+}
+$("#f").onsubmit=async function(e){
+  e.preventDefault();var t=$("#in").value.trim();if(!t||!cur)return;
+  $("#in").value="";
+  try{await db.collection("groups").doc(cur).collection("messages").add({uid:me,text:t.slice(0,4000),ts:Date.now()})}
+  catch(x){alert("Không gửi được tin nhắn.");$("#in").value=t}
+};
+$("#in").onkeydown=function(e){if(e.key==="Enter"&&!e.shiftKey&&!e.isComposing){e.preventDefault();$("#f").requestSubmit()}};
+$("#back").onclick=function(){openG(null)};
+function dlg(build){
+  var o=el("div","dlg"),b=el("div");o.appendChild(b);
+  o.onclick=function(e){if(e.target===o)o.remove()};
+  build(b,function(){o.remove()});document.body.appendChild(o);
+}
+$("#newg").onclick=function(){
+  dlg(function(b,close){
+    b.appendChild(el("b",null,"Tạo nhóm mới"));
+    var i=el("input");i.placeholder="Tên nhóm (vd: Ban cán sự, Quỹ lớp…)";b.appendChild(i);
+    var ok=el("button","p","Tạo nhóm");
+    ok.onclick=async function(){
+      var n=i.value.trim();if(!n)return;ok.disabled=true;
+      try{var r=await db.collection("groups").add({name:n.slice(0,80),members:[me],owner:me,created:Date.now()});close();
+        setTimeout(function(){openG(r.id)},400)}catch(e){alert("Không tạo được nhóm.");ok.disabled=false}
+    };
+    b.appendChild(ok);i.focus();
+  });
+};
+$("#mem").onclick=function(){
+  var g=groups.find(function(x){return x.id===cur});if(!g)return;
+  var isOwner=g.owner===me;
+  dlg(async function(b,close){
+    b.appendChild(el("b",null,"Thành viên – "+g.name));
+    var list=el("div");b.appendChild(list);
+    async function draw(){
+      await nm(g.members);list.replaceChildren();
+      g.members.forEach(function(id){
+        var c=el("span","chip",dname(id)+(id===g.owner?" ★":""));
+        if(isOwner&&id!==me){var x=el("button","sm","×");x.style.border="0";x.onclick=async function(){
+          g.members=g.members.filter(function(m){return m!==id});
+          await db.collection("groups").doc(g.id).update({members:g.members});draw()};c.appendChild(x)}
+        list.appendChild(c);
+      });
+    }
+    draw();
+    if(isOwner){
+      var s=el("input");s.placeholder="Tìm tên để thêm thành viên…";b.appendChild(s);
+      var res=el("div");b.appendChild(res);
+      s.oninput=async function(){
+        var q=s.value.trim();res.replaceChildren();if(!q)return;
+        var hits=await user.search(q);
+        hits.filter(function(h){return g.members.indexOf(h.id)<0}).forEach(function(h){
+          var d=el("div","hit",h.name||"(không tên)");
+          d.onclick=async function(){
+            names[h.id]=h.name;g.members=g.members.concat([h.id]);
+            await db.collection("groups").doc(g.id).update({members:g.members});
+            res.replaceChildren();s.value="";draw()};
+          res.appendChild(d);
+        });
+        if(!res.children.length)res.appendChild(el("div","note","Không tìm thấy."));
+      };
+      var del=el("button","sm","Xóa nhóm");del.onclick=async function(){
+        if(!confirm("Xóa nhóm này? Không thể hoàn tác."))return;
+        await db.collection("groups").doc(g.id).delete();close()};
+      b.appendChild(del);
+    }else{
+      var lv=el("button","sm","Rời nhóm");lv.onclick=async function(){
+        if(!confirm("Rời nhóm này?"))return;
+        await db.collection("groups").doc(g.id).update({members:g.members.filter(function(m){return m!==me})});close()};
+      b.appendChild(lv);
+    }
+    b.appendChild(el("div","note","Người được thêm phải có quyền mở trang này (Contributor trở lên)."));
+  });
+};
+init();
+</script>
+</body>
+</html>
